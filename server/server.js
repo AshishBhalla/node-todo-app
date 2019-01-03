@@ -61,6 +61,26 @@ app.get('/todos/:id',(req,res) =>{
 });
 
 
+//DELETE ROUTE
+app.delete('/todos/:id', (req,res) =>{
+    var id = req.params.id;
+    //validate ID
+    if (!ObjectID.isValid(id)) {
+        //if id is not valid, send 404 and an empty body
+        return res.sendStatus(404).send();
+    };
+    Todo.findByIdAndRemove(id).then((todos) => {
+        if (!todos) {
+            //if todos not found send 404 and an empty body
+            res.sendStatus(404).send();
+        }
+        res.send({
+            todos: todos
+        })
+    }).catch((e) =>{
+        res.sendStatus(400).send();
+    }); 
+});
 
 app.listen(3000, () =>{
     console.log('App strated on port 3000');
