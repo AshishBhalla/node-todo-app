@@ -1,4 +1,5 @@
 /****************** library imports*******************************/
+const _ = require('lodash');
 var express    = require('express');
 //body-parser is gonna let us send json to a server, it basically 
 //takes a body and convert it into JS object
@@ -81,6 +82,59 @@ app.delete('/todos/:id', (req,res) =>{
         res.sendStatus(400).send();
     }); 
 });
+
+//UPDATE route
+
+app.patch('/todos/:id',(req,res) =>{
+    var id = req.params.id;
+    //_.pick will take the request body and will return the properties specified from the body
+    // which will be then a part of the assigned variable i.e. body variable here
+    var body = _.pick(req.body,['text','completed']);
+    if (!ObjectID.isValid(id)) {
+        //if id is not valid, send 404 and an empty body
+        return res.sendStatus(404).send();
+    };
+    if (_.isBoolean(body.completed) && body.completed) {
+        body.completedAt = new Date().getTime();
+    }
+    else{
+        body.completed = false;
+        body.completedAt = null;
+    }
+    Todo.findByIdAndUpdate(id, {
+        $set: body
+    },{
+        new : true
+    }).then((todo) =>{
+        if (!todo){
+            return res.sendStatus(404).send();
+        }
+        res.send(todo);
+    }).catch((err) =>{
+        return res.sendStatus(400).send();
+    })
+});
+
+app.post('/users',(req,res) =>{
+    var body = _.pick(req.body, ['email', 'password'])
+    var user = new User(body);
+    // user.save().then((user) =>{
+        //removing user from passed parameters
+    user.save().then(() => {
+        //calling the instance method of the user model
+        //in broader sense, we are first saving the user emailid and password and then generating a token for it
+        //and then save it via(user model) and then return the entire user back
+        return user.generateAuthToken();
+        // res.send(user);
+        //this is what was returned from the method
+    }).then((token) => {
+        //add ing x- means we are creating a custom header and not the one used by http request
+        res.header('x-auth', token).send(user);
+    }).catch((e) => {
+        res.status(400).send(e);
+    })
+});
+
 
 app.listen(3000, () =>{
     console.log('App strated on port 3000');
