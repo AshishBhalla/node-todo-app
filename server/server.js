@@ -12,6 +12,7 @@ var {ObjectID} = require('mongodb');
 var {mongoose} = require('./db/mongoose')
 var {Todo}     = require('./models/todo')
 var {User}     = require('./models/user')
+var {authenticate} =require('./middleware/authenticate');
 /****************** local imports end****************************/
 
 
@@ -128,12 +129,19 @@ app.post('/users',(req,res) =>{
         // res.send(user);
         //this is what was returned from the method
     }).then((token) => {
-        //add ing x- means we are creating a custom header and not the one used by http request
+        //adding x- means we are creating a custom header and not the one used by http request
+        //setting a header
         res.header('x-auth', token).send(user);
     }).catch((e) => {
         res.status(400).send(e);
     })
 });
+
+//authenticats is the middleware route
+app.get('/users/me',authenticate, (req,res) =>{
+    //as the user has been authenticated by the authenticate middleware we now have user property available in requet
+        res.send(req.user);
+})
 
 
 app.listen(3000, () =>{
@@ -141,32 +149,6 @@ app.listen(3000, () =>{
 })
 
 module.exports = {app};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /*Below is for infromation*/
 // //initializing the model Constructor

@@ -47,6 +47,7 @@ var UserSchema = new mongoose.Schema({
     //defining instance methods on the schema, it has access to all the objects defined in schema
     //note we are using function and not arrow function as arro function doesn't bind this variable
 UserSchema.methods.generateAuthToken = function() {
+    //instance methods are called on the individual document hence "user"(which is a document)
     var user = this;
     var access = 'auth';
     //jwt.sign({object},secretKey)
@@ -64,6 +65,31 @@ UserSchema.methods.generateAuthToken = function() {
         return token;
     });
 };
+
+//creating a model method
+UserSchema.statics.findByToken = function(token){
+    //model methods are called upon the model hence "User"(which is a model)
+    var User = this
+    var decoded;
+
+    try{
+        decoded = jwt.verify(token,'abc123');
+    }
+    catch(e){
+        // either use this
+        // return new Promise((resolve, reject) =>{
+        //     reject();
+        // })
+        //or use this
+        return Promise.reject();
+    }
+
+    return User.findOne({
+        '_id' : decoded._id,
+        'tokens.token' : token,
+        'tokens.access' : 'auth'
+    })
+}
 
 //overriding the toJSON() method to send only the required properties in the JSON
 UserSchema.methods.toJSON = function(){
