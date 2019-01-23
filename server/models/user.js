@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const validator = require('validator');
 
 const _ = require('lodash');
+const bcrypt = require('bcryptjs');
 
 //creating a mongoose schema for User so that mongoose knows how to store the data
 //its like defining the table structure
@@ -99,6 +100,27 @@ UserSchema.methods.toJSON = function(){
 
     return _.pick(userObject, ['_id','email'])
 }
+
+
+
+//below is a mongoose middleware to hash the password
+UserSchema.pre('save', function(next){
+    var user = this;
+    //to only hash the password if it was modified i.e. to stop the rehashing a hashed password
+    if (user.isModified('password')){
+        // to salt the password 2 args
+        // 1: rounds-to increase the complexity 2. a call back function
+        bcrypt.genSalt(10,(err, salt) =>{
+            bcrypt.hash(user.password,salt,(err,hash) =>{
+                user.password = hash;
+                next();
+            })
+        })
+    }
+    else{
+        next();
+    }
+})
 
 //creating the model using Schema
 var User = mongoose.model('User',UserSchema);
