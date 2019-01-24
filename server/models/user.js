@@ -90,6 +90,28 @@ UserSchema.statics.findByToken = function(token){
         'tokens.token' : token,
         'tokens.access' : 'auth'
     })
+};
+
+UserSchema.statics.findByCredentials = function(email,password) {
+    var User = this;
+    return User.findOne({email}).then((user)=>{
+        if(!user){
+            //rejecting by giving a reject promise
+            return Promise.reject();
+        }
+        //bcrypt uses callbacks and not the promises, thus we are adhocally returning a promise
+        //for bcrypt
+        return new Promise((resolve,reject) =>{
+            bcrypt.compare(password,user.password,(err,res)=>{
+                if (res){
+                    resolve(user);
+                }
+                else{
+                    reject();
+                }
+            })
+        })
+    })
 }
 
 //overriding the toJSON() method to send only the required properties in the JSON

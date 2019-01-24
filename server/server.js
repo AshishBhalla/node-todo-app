@@ -5,6 +5,7 @@ var express    = require('express');
 //takes a body and convert it into JS object
 var bodyParser = require('body-parser');
 var {ObjectID} = require('mongodb');
+var bcrypt = require('bcryptjs');
 /****************** library imports end***************************/
 
 
@@ -141,6 +142,19 @@ app.post('/users',(req,res) =>{
 app.get('/users/me',authenticate, (req,res) =>{
     //as the user has been authenticated by the authenticate middleware we now have user property available in requet
         res.send(req.user);
+});
+
+
+app.post('/users/login',(req,res) =>{
+    var email = req.body.email;
+    var password = req.body.password;
+    User.findByCredentials(email,password).then((user) =>{
+        return user.generateAuthToken().then((token) =>{
+            res.header('x-auth', token).send(user);
+        })
+    }).catch((err) =>{
+        res.status(400).send();
+    })
 })
 
 
